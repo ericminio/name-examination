@@ -191,9 +191,13 @@ export default new Vuex.Store({
                     approved: {response: {numfound: ''}},
                     conditional: {response: {numfound: ''}},
                     rejected: {response: {numfound: ''}}
-    }
+    },
+    dashboardData: {}
   },
   mutations: {
+    dashboardData (state, value) {
+        state.dashboardData = value;
+    },
     requestType (state, value) {
       state.compInfo.requestType = value;
     },
@@ -1291,6 +1295,18 @@ export default new Vuex.Store({
       })
         .catch(error => console.log('ERROR: ' + error))
     },
+    getDashboardData( {commit, state} ) {
+        const myToken = sessionStorage.getItem('KEYCLOAK_TOKEN');
+        const url = '/api/v1/requests/dashboard'
+        console.log('URL:', url);
+        const vm = this;
+        return axios.get(url, {headers: {Authorization: `Bearer ${myToken}`}})
+            .then(response => {
+              console.log('Dashboard data:' + JSON.stringify(response.data))
+              commit('dashboardData', response.data)
+            })
+          .catch(error => console.log('ERROR: ' + error))
+    },
 
     setCurrentName({commit, state},objName ) {
       commit('currentNameObj', objName);
@@ -1719,5 +1735,8 @@ export default new Vuex.Store({
     errorJSON(state) {
       return state.errorJSON
     },
+    dashboardData(state){
+        return state.dashboardData;
+    }
   }
 })

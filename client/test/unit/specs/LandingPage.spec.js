@@ -16,36 +16,87 @@ describe('LandingPage.vue', () => {
 
         let store;
         let vm;
+        let sentMessage;
         beforeEach(()=>{
             store = {
                 getters: {
                     isAuthenticated:true,
-                    statsDataJSON: {
-                        draft: {
-                            response: {
-                                numFound: 3
-                            }
-                        },
-                        hold: {
-                            response: {
-                                numFound: 5
-                            }
-                        }
+                    dashboardData: {
+                        priorityRequestCount:42,
+                        days: [
+                            { date:'October 31', count:125 },
+                            { date:'October 30', count:25 }
+                        ]
                     }
+                },
+                dispatch:function(message) {
+                    sentMessage = message;
                 }
             };
             const Constructor = Vue.extend(LandingPage);
-            vm = new Constructor({store:store}).$mount();
+            vm = new Constructor({store:store}).$mount(document.getElementById('app'));
         })
         it('renders welcome page', () => {
             expect(vm.$el.querySelector('h3').textContent).toContain('Welcome to Name X!');
         })
-        it('displays not examined count', () => {
-            expect(vm.$el.querySelector('.card-body').textContent).toContain('Not Examined: 3');
+
+        it('displays priority requests count', () => {
+            expect(vm.$el.querySelector('#priority-requests-count').textContent).toContain('42');
         })
-        it('displays hold count', () => {
-            expect(vm.$el.querySelector('.card-body').textContent).toContain('Hold: 5');
+        it('displays first day count', () => {
+            expect(vm.$el.querySelector('#day-1 .date').textContent).toContain('October 31');
+            expect(vm.$el.querySelector('#day-1 .count').textContent).toContain('125');
+        })
+        it('displays second day count', () => {
+            expect(vm.$el.querySelector('#day-2 .date').textContent).toContain('October 30');
+            expect(vm.$el.querySelector('#day-2 .count').textContent).toContain('25');
+        })
+        it('displays total', () => {
+            expect(vm.$el.querySelector('#total').textContent).toContain('150');
+        })
+
+        describe('refresh button', ()=>{
+
+            it('triggers reload', ()=>{
+                let button = vm.$el.querySelector('#refresh');
+                let window = button.ownerDocument.defaultView;
+                var click = new window.Event('click');
+                button.dispatchEvent(click);
+
+                expect(sentMessage).toEqual('getDashboardData');
+            })
+        })
+
+        describe('resists empty data', ()=>{
+            let store;
+            let vm;
+            let sentMessage;
+            beforeEach(()=>{
+                store = {
+                    getters: {
+                        isAuthenticated:true,
+                        dashboardData: {
+                            priorityRequestCount:0,
+                            days: []
+                        }
+                    },
+                    dispatch:function(message) {
+                        sentMessage = message;
+                    }
+                };
+                const Constructor = Vue.extend(LandingPage);
+                vm = new Constructor({store:store}).$mount(document.getElementById('app'));
+            })
+
+            it('displays priority requests count', () => {
+                expect(vm.$el.querySelector('#priority-requests-count').textContent).toContain('0');
+            })
+            it('does not displays day count', () => {
+                expect(vm.$el.querySelector('#day-1')).toEqual(null);
+            })
+            it('displays total', () => {
+                expect(vm.$el.querySelector('#total').textContent).toContain('0');
+            })
         })
     })
-
 });
